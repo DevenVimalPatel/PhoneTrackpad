@@ -1,11 +1,14 @@
 package com.trackpad.aldini.phonetrackpad;
 
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Trackpad extends AppCompatActivity {
 
@@ -36,9 +39,28 @@ public class Trackpad extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trackpad);
 
+        isConnected();
+
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+    }
+
+    private boolean isConnected(){
+        ConnectivityManager connection =
+                (ConnectivityManager) this.getSystemService(getBaseContext().CONNECTIVITY_SERVICE);
+        NetworkInfo info = connection.getActiveNetworkInfo();
+        if(info != null){
+            if(info.getType() != ConnectivityManager.TYPE_WIFI){
+                Toast.makeText(this, info.getTypeName(), Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (info.getType() != ConnectivityManager.TYPE_MOBILE)
+            {
+                Toast.makeText(this, info.getTypeName(), Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        }
+        return false;
     }
 
 }
