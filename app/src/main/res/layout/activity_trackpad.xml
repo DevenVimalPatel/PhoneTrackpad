@@ -7,25 +7,20 @@
     android:layout_height="match_parent"
     tools:context=".Trackpad">
 
-    <android.support.constraint.ConstraintLayout
-        android:id="@+id/touchpad"
-        android:layout_height="0dp"
-        android:maxHeight="@dimen/activity_vertical_margin"
-        android:maxWidth="@dimen/activity_horizontal_margin"
-        android:minHeight="@dimen/activity_vertical_margin"
-        android:minWidth="@dimen/activity_horizontal_margin"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="0dp">
-
-    </android.support.constraint.ConstraintLayout>
-
     <Button
         android:id="@+id/button"
         android:layout_width="385dp"
         android:layout_height="63dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginTop="446dp"
-        android:text="Left Mouse"
+        android:background="#332f5b"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Space
+        android:layout_width="388dp"
+        android:layout_height="449dp" />
 
 </android.support.constraint.ConstraintLayout>
