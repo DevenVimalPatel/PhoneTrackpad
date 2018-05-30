@@ -66,7 +66,7 @@ public class Server  {
 		while((inline = in.readLine()) != null) {
 		    System.out.println(inline);
 		    if (inline.equals("quit"))
-			return true;
+			return false;
 		    String[] parts = inline.split(",");
 		    if(parts.length > 2)
 			continue;
@@ -111,7 +111,7 @@ public class Server  {
 	    System.err.println("Issues accepting or reading from client; print stack trace...");
 	    e.printStackTrace();	    
 	}   
-	return false;
+	return true;
     }
 
 

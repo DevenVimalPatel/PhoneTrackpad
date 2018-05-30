@@ -111,7 +111,7 @@ public class Server  {
 	    System.err.println("Issues accepting or reading from client; print stack trace...");
 	    e.printStackTrace();	    
 	}   
-	return true;
+	return false;
     }
 
 
