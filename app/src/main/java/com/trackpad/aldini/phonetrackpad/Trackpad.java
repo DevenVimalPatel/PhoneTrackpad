@@ -42,12 +42,10 @@ public class Trackpad extends AppCompatActivity {
             try {
                 toServer = new Socket(ip, port);
             } catch (ConnectException ce) {
-                Log.e(err, "IOException thrown...? \n" + Log.getStackTraceString(ce));
-                //handleerror
+                Log.e(err, "ConnectionException thrown... \n" + Log.getStackTraceString(ce));
                 return "connect";
             } catch (Exception e) {
-                Log.e(err, "IOException thrown...? \n" + Log.getStackTraceString(e));
-                //handleerror
+                Log.e(err, "Exception thrown... \n" + Log.getStackTraceString(e));
                 return "e";
             }
             if (toServer != null) {
@@ -62,6 +60,18 @@ public class Trackpad extends AppCompatActivity {
         @Override
         protected String doInBackground(String... args) {
             myPrint.println(args[0]);
+            return "done";
+
+        }
+    }
+
+    private class NetworkDone extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... args) {
+            myPrint.close();
+            try {
+                toServer.close();
+            } catch (Exception e) {}
             return "done";
 
         }
@@ -92,7 +102,7 @@ public class Trackpad extends AppCompatActivity {
         nout.execute(tobeprint);
         try {
             nout.get();
-        } catch (Exception e) {}
+        } catch (Exception e) { }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -103,23 +113,12 @@ public class Trackpad extends AppCompatActivity {
 
         if (!isConnected()) {
             Log.e(err, "Device is not connected.");
-            //handleerror
+            Toast.makeText(this, "No Connection", Toast.LENGTH_SHORT).show();
             finish();
         }
 
         NetworkOperations n = new NetworkOperations();
         n.execute("");
-
-        /*
-        while(n.getStatus() != NetworkOperations.Status.FINISHED){
-            Log.e(err, "GAY FAG");
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        */
 
         String res = "";
 
@@ -127,20 +126,31 @@ public class Trackpad extends AppCompatActivity {
             res = n.get();
         } catch (CancellationException e) {
             Log.e(err, "One of Three Exceptions thrown");
+            finish();
         } catch (ExecutionException e) {
             Log.e(err, "One of Three Exceptions thrown");
+            finish();
         } catch (InterruptedException e) {
             Log.e(err, "One of Three Exceptions thrown");
+            finish();
         }
 
         if (res == "") {
             Log.e(err, "n.get gives empty string");
+            Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+            finish();
         } else if (res == "e") {
             Log.e(err, "e thrown");
+            Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+            finish();
         } else if (res == "connect") {
             Log.e(err, "connect thrown");
+            Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+            finish();
         } else if (res == "false") {
             Log.e(err, "toServer is Null");
+            Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+            finish();
         }
 
         try {
@@ -150,11 +160,6 @@ public class Trackpad extends AppCompatActivity {
             finish();
         }
 
-//        if(!connectToServ()){
-//            Log.e(err, "Connection to server failed.");
-//            //handleerror
-//            finish();
-//        }
 
         final Button button = findViewById(R.id.button);
         button.setOnTouchListener(new View.OnTouchListener() {
@@ -170,11 +175,6 @@ public class Trackpad extends AppCompatActivity {
                         printStuff("2");
                         break;
                     }
-                        /*
-                        default:
-                            printStuff("Downs")
-                            break;
-                            */
 
                 }
                 return true;
@@ -185,25 +185,14 @@ public class Trackpad extends AppCompatActivity {
         button2.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                //int myPID = event.getPointerId(event.getActionIndex());
 
                 switch (event.getActionMasked()) {
                     case MotionEvent.ACTION_DOWN: {
-                        /*if(myVelo == null) {
-                            myVelo = VelocityTracker.obtain();
-                        } else {
-                            myVelo.clear();
-                        }
-                        myVelo.addMovement(event);*/
                         pastX = event.getX();
                         pastY = event.getY();
                         break;
                     }
                     case MotionEvent.ACTION_MOVE: {
-                        /*
-                        myVelo.addMovement(event);
-                        myVelo.computeCurrentVelocity(50);
-                        printStuff(""+VelocityTrackerCompat.getXVelocity(myVelo, myPID)+","+VelocityTrackerCompat.getYVelocity(myVelo, myPID)); */
                         currX = event.getX();
                         currY = event.getY();
                         String out = ""+(currX-pastX)+","+(currY-pastY);
@@ -216,13 +205,7 @@ public class Trackpad extends AppCompatActivity {
 
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
-                       /* myVelo.recycle();*/
                         break;
-                        /*
-                        default:
-                            printStuff("Downs")
-                            break;
-                            */
 
                 }
                 return true;
@@ -236,21 +219,14 @@ public class Trackpad extends AppCompatActivity {
 
         printStuff("quit");
 
-        myPrint.close();
+        NetworkDone ndone = new NetworkDone();
+        ndone.execute("");
         try {
-            toServer.close();
-        } catch (Exception e) {}
+            ndone.get();
+        } catch (Exception e) { }
+
+        finish();
     }
-//    private boolean connectToServ(){
-//        try {
-//            toServer = new Socket("127.0.0.1", 8000);
-//        } catch (Exception e) {
-//            Log.e(err, "IOException thrown...? \n" + Log.getStackTraceString(e));
-//            //handleerror
-//            finish();
-//        }
-//        return toServer != null;
-//    }
 
     private boolean isConnected(){
         ConnectivityManager connection =

@@ -3,7 +3,7 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
-    <string name="title_activity_login">Input Server Info</string>
+    <string name="title_activity_login">PhoneTrackpad</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">IP</string>

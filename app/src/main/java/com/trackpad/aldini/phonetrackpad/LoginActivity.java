@@ -13,6 +13,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -21,6 +22,12 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.net.ConnectException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 /**
  * A login screen that offers login via email/password.
@@ -42,19 +49,23 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private UserLoginTask mAuthTask = null;
 
     // UI references.
     private AutoCompleteTextView mIP;
     private EditText mPort;
     private View mProgressView;
     private View mLoginFormView;
+    private Socket testSocket = null;
+    public static final String err = "error";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
+        try {
+            testSocket.setSoTimeout(2000);
+        } catch (Exception e) {}
         mIP = (AutoCompleteTextView) findViewById(R.id.ip);
 
         mPort = (EditText) findViewById(R.id.port);
@@ -90,9 +101,6 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-        if (mAuthTask != null) {
-            return;
-        }
 
         // Reset errors.
         mIP.setError(null);
@@ -133,27 +141,63 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
             //showProgress(true);
             //mAuthTask = new UserLoginTask(ip, port);
             //mAuthTask.execute((Void) null);
-            Intent intent = new Intent(getBaseContext(), Trackpad.class);
-            intent.putExtra("IP", ip);
-            intent.putExtra("PORT", port);
-            startActivity(intent);
+            showProgress(true);
+            NetworkOperations n = new NetworkOperations();
+            n.execute(ip, port);
+
+            String res = "";
+
+
+            try {
+                res = n.get();
+            } catch (Exception e) {
+                cancel = true;
+            }
+
+            showProgress(false);
+
+            if (res == "") {
+                Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+                cancel = true;
+            } else if (res == "e") {
+                Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+                cancel = true;
+            } else if (res == "connect") {
+                Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+                cancel = true;
+            } else if (res == "time") {
+                Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+                cancel = true;
+            } else if (res == "false") {
+                Toast.makeText(this, "Could not connect", Toast.LENGTH_SHORT).show();
+                cancel = true;
+            } else {
+                try {
+                    testSocket.close();
+                } catch (Exception e) { }
+
+                Intent intent = new Intent(getBaseContext(), Trackpad.class);
+                intent.putExtra("IP", ip);
+                intent.putExtra("PORT", port);
+                startActivity(intent);
+            }
 
         }
     }
 
     private boolean isIPValid(String ip) {
-        /*
-        String[] ip_part = ip.split(".");
+
+        String[] ip_part = ip.split("\\.");
         if(ip_part.length != 4)
             return false;
         for(int i = 0; i < 4; ++i) {
             try {
-                if (Integer.parseInt(ip_part[i]) > 255 || Integer.parseInt(ip_part[i]) < 0)
+                if ((Integer.parseInt(ip_part[i]) > 255) || (Integer.parseInt(ip_part[i]) < 0))
                     return false;
             } catch (NumberFormatException e) {
                 return false;
             }
-        */
+        }
         return true;
     }
 
@@ -203,114 +247,29 @@ public class LoginActivity extends AppCompatActivity { //implements LoaderCallba
         }
     }
 
-//    @Override
-//    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-//        return new CursorLoader(this,
-//                // Retrieve data rows for the device user's 'profile' contact.
-//                Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
-//                        ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
-//
-//                // Select only email addresses.
-//                ContactsContract.Contacts.Data.MIMETYPE +
-//                        " = ?", new String[]{ContactsContract.CommonDataKinds.Email
-//                .CONTENT_ITEM_TYPE},
-//
-//                // Show primary email addresses first. Note that there won't be
-//                // a primary email address if the user hasn't specified one.
-//                ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
-//    }
-//
-//    @Override
-//    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-//        List<String> emails = new ArrayList<>();
-//        cursor.moveToFirst();
-//        while (!cursor.isAfterLast()) {
-//            emails.add(cursor.getString(ProfileQuery.ADDRESS));
-//            cursor.moveToNext();
-//        }
-//
-//        addEmailsToAutoComplete(emails);
-//    }
-//
-//    @Override
-//    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-//
-//    }
-//
-//    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
-//        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-//        ArrayAdapter<String> adapter =
-//                new ArrayAdapter<>(LoginActivity.this,
-//                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-//
-//        mEmailView.setAdapter(adapter);
-//    }
 
-
-//    private interface ProfileQuery {
-//        String[] PROJECTION = {
-//                ContactsContract.CommonDataKinds.Email.ADDRESS,
-//                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
-//        };
-//
-//        int ADDRESS = 0;
-//        int IS_PRIMARY = 1;
-//    }
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mIP;
-        private final String mPort;
-
-        UserLoginTask(String ip, String port) {
-            mIP = ip;
-            mPort = port;
-        }
-
+    private class NetworkOperations extends AsyncTask<String, Void, String> {
         @Override
-        protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
+        protected String doInBackground(String... args) {
 
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
+                testSocket = new Socket();
+                testSocket.connect(new InetSocketAddress(args[0], Integer.parseInt(args[1])), 1000);
+            } catch (ConnectException ce) {
+                Log.e(err, "ConnectionException thrown... \n" + Log.getStackTraceString(ce));
+                return "connect";
+            } catch (SocketTimeoutException e) {
+                Log.e(err, "Timeout thrown... \n" + Log.getStackTraceString(e));
+                return "time";
+            } catch (Exception e) {
+                Log.e(err, "Exception thrown... \n" + Log.getStackTraceString(e));
+                return "e";
             }
-
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mIP)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPort);
-                }
-            }
-
-            // TODO: register the new account here.
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success) {
-                finish();
+            if (testSocket != null) {
+                return "true";
             } else {
-                LoginActivity.this.mPort.setError(getString(R.string.error_incorrect_password));
-                LoginActivity.this.mPort.requestFocus();
+                return "false";
             }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
         }
     }
 }
